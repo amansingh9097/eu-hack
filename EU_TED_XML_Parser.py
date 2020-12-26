@@ -45,6 +45,7 @@ def coded_and_translation_data(doc, EN_POS):
             d['n2016-CA_CE_NUTS'] = ','.join(item['#text'] for item in doc['CODED_DATA_SECTION']['NOTICE_DATA']['n2016:CA_CE_NUTS'])
     
     # CODED_DATA_SECTION - CODIF_DATA
+    d['INITIATOR'] = doc['CODED_DATA_SECTION']['CODIF_DATA']['INITIATOR']
     d['DS_DATE_DISPATCH'] = doc['CODED_DATA_SECTION']['CODIF_DATA']['DS_DATE_DISPATCH'] if 'DS_DATE_DISPATCH' in doc['CODED_DATA_SECTION']['CODIF_DATA'].keys() else ''
     d['DT_DATE_FOR_SUBMISSION'] = doc['CODED_DATA_SECTION']['CODIF_DATA']['DT_DATE_FOR_SUBMISSION'] if 'DT_DATE_FOR_SUBMISSION' in doc['CODED_DATA_SECTION']['CODIF_DATA'].keys() else ''
     d['AA_AUTHORITY_TYPE'] = doc['CODED_DATA_SECTION']['CODIF_DATA']['AA_AUTHORITY_TYPE']['#text']
@@ -71,9 +72,9 @@ def coded_and_translation_data(doc, EN_POS):
     
     # TRANSLATION_SECTION - ML_AA_NAMES
     try:
-        d['CONTRACTING AUTHORITY'] = doc['TRANSLATION_SECTION']['ML_AA_NAMES']['AA_NAME'][EN_POS]['#text']
+        d['AWARDING AUTHORITY'] = doc['TRANSLATION_SECTION']['ML_AA_NAMES']['AA_NAME'][EN_POS]['#text']
     except:
-        d['CONTRACTING AUTHORITY'] = doc['TRANSLATION_SECTION']['ML_AA_NAMES']['AA_NAME']['#text']
+        d['AWARDING AUTHORITY'] = doc['TRANSLATION_SECTION']['ML_AA_NAMES']['AA_NAME']['#text']
         
     return d
 
@@ -124,7 +125,6 @@ def R209_CAN(doc, EN_POS):
                 d['MAX_LOT_DIVISION'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['LOT_DIVISION']['LOT_MAX_NUMBER'] if 'LOT_MAX_NUMBER' in doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['LOT_DIVISION'].keys() else ''
                 d['MAX_LOT_PER_TENDERER'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['LOT_DIVISION']['LOT_MAX_ONE_TENDERER'] if 'LOT_MAX_ONE_TENDERER' in doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['LOT_DIVISION'].keys() else ''
                 d['LOT_ALL'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['LOT_DIVISION']['LOT_ALL'] if 'LOT_ALL' in doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['LOT_DIVISION'].keys() else ''
-
         if isinstance(doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR'], dict):
             if 'MAIN_SITE' in doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR'].keys():
                 if isinstance(doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR']['MAIN_SITE']['P'], list):
@@ -167,7 +167,6 @@ def R209_CAN(doc, EN_POS):
                     d['OBJECT_DESCR_SHORT_DESCR'] = ''.join([s['#text'] if isinstance(s, dict) else s for s in doc['FORM_SECTION'][EN_POS]['F03_2014']['OBJECT_CONTRACT']['OBJECT_DESCR'][EN_POS]['SHORT_DESCR']['P']])
                     if 'DURATION' in doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR'][EN_POS].keys():
                         d['OBJECT_DESCR_DURATION'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR'][EN_POS]['DURATION']['#text'] + ' ' + doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR'][EN_POS]['DURATION']['@TYPE']
-
         elif isinstance(doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR'], list):
             lot_title, cpv_additional, lot_no, n2016_nuts, short_descr, main_site = [],[],[],[],[],[]
             for item in doc['FORM_SECTION']['F03_2014'][EN_POS]['OBJECT_CONTRACT']['OBJECT_DESCR']:
@@ -226,7 +225,7 @@ def R209_CAN(doc, EN_POS):
             d['OBJECT_DESCR_SHORT_DESCR'] = ','.join([','.join(i) for i in short_descr if isinstance(i, list)])
             
         if isinstance(doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT'], list):
-            awarded_contract_lots, awarded_contract_titles, num_of_awarded_contract = [], [], []
+            awarded_contract_lots, awarded_contract_titles, num_of_awarded_contract, contractors, awarded_est_val, awarded_tot_val = [],[],[],[],[],[]
             for each in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']:
                 awarded_contract_lots.append(each['LOT_NO']) if 'LOT_NO' in each.keys() else ''
                 if 'TITLE' in each.keys():
@@ -234,15 +233,48 @@ def R209_CAN(doc, EN_POS):
                         awarded_contract_titles.append(each['TITLE']['P'])
                     else:
                         awarded_contract_titles.append(each['TITLE']['P']['#text'])
+                if 'AWARDED_CONTRACT' in each.keys():
+                    if 'CONTRACTORS' in each['AWARDED_CONTRACT'].keys():
+                        if isinstance(each['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR'], dict):
+                            contractors.append(each['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']['ADDRESS_CONTRACTOR']['OFFICIALNAME'])
+                        else:
+                            for item in each['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']:
+                                if 'ADDRESS_CONTRACTORS' in item.keys():
+                                    if 'OFFICIALNAME' in item['ADDRESS_CONTRACT'].keys():
+                                        contractors.append(item['ADDRESS_CONTRACT']['OFFICIALNAME'])
+                    if 'VALUES' in each['AWARDED_CONTRACT'].keys():
+                        if 'VAL_ESTIMATED_TOTAL' in each['AWARDED_CONTRACT']['VALUES'].keys():
+                            awarded_est_val.append(each['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['#text']+' '+each['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['@CURRENCY'])
+                        if 'VAL_TOTAL' in each['AWARDED_CONTRACT']['VALUES'].keys():
+                            awarded_tot_val.append(each['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['#text']+' '+each['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['@CURRENCY'])
                 if 'NO_AWARDED_CONTRACT' in each.keys():
                     if 'PROCUREMENT_UNSUCCESSFUL' in each['NO_AWARDED_CONTRACT'].keys():
                         num_of_awarded_contract.append(each['NO_AWARDED_CONTRACT']['PROCUREMENT_UNSUCCESSFUL'])
             d['AWARDED_CONTRACT_LOTS'] = '; '.join(awarded_contract_lots)
             d['AWARDED_CONTRACT_TITLES'] = '; '.join(awarded_contract_titles)
+            d['AWARDED_CONTRACT_CONTRACTORS'] = '; '.join(contractors)
+            d['AWARDED_CONTRACT_EST_TOTAL_VAL'] = '; '.join(awarded_est_val)
+            d['AWARDED_CONTRACT_TOTAL_VAL'] = '; '.join(awarded_tot_val)
             d['AWARDED_CONTRACT_PROCUREMENT_UNSUCCESSFUL'] = '; '.join([str(num) for num in num_of_awarded_contract])
         else:
             d['AWARDED_CONTRACT_LOTS'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['LOT_NO'] if 'LOT_NO' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT'].keys() else ''
             d['AWARDED_CONTRACT_TITLES'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['TITLE']['P'] if 'TITLE' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT'].keys() else ''
+            if 'AWARDED_CONTRACT' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT'].keys():
+                if 'CONTRACTORS' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT'].keys():
+                    if isinstance(doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR'], dict):
+                        d['AWARDED_CONTRACT_CONTRACTORS'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']['ADDRESS_CONTRACTOR']['OFFICIALNAME']
+                    else:
+                        contractors = []
+                        for each in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']:
+                            if 'ADDRESS_CONTRACTORS' in each.keys():
+                                if 'OFFICIALNAME' in each['ADDRESS_CONTRACTORS'].keys():
+                                    contractors.append(each['ADDRESS_CONTRACTORS']['OFFICIALNAME'])
+                        d['AWARDED_CONTRACT_CONTRACTORS'] = '; '.join(contractors)
+                if 'VALUES' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT'].keys():
+                    if 'VAL_ESTIMATED_TOTAL' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES'].keys():
+                        d['AWARDED_CONTRACT_EST_TOTAL_VAL'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['#text']+' '+doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['@CURRENCY']
+                    if 'VAL_TOTAL' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES'].keys():
+                        d['AWARDED_CONTRACT_TOTAL_VAL'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['#text']+' '+doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['@CURRENCY']
             if 'NO_AWARDED_CONTRACT' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT'].keys():
                 if 'PROCUREMENT_UNSUCCESSFUL' in doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['NO_AWARDED_CONTRACT'].keys():
                     d['AWARDED_CONTRACT_PROCUREMENT_UNSUCCESSFUL'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['AWARD_CONTRACT']['NO_AWARDED_CONTRACT']['PROCUREMENT_UNSUCCESSFUL']
@@ -389,7 +421,7 @@ def R209_CAN(doc, EN_POS):
             d['OBJECT_DESCR_SHORT_DESCR'] = ','.join([','.join(i) for i in short_descr if isinstance(i, list)])
             
         if isinstance(doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'], list):
-            awarded_contract_lots, awarded_contract_titles, num_of_awarded_contract = [], [], []
+            awarded_contract_lots, awarded_contract_titles, num_of_awarded_contract, contractors, awarded_est_val, awarded_tot_val = [],[],[],[],[],[]
             for each in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']:
                 awarded_contract_lots.append(each['LOT_NO']) if 'LOT_NO' in each.keys() else ''
                 if 'TITLE' in each.keys():
@@ -397,19 +429,51 @@ def R209_CAN(doc, EN_POS):
                         awarded_contract_titles.append(each['TITLE']['P'])
                     else:
                         awarded_contract_titles.append(each['TITLE']['P']['#text'])
+                if 'AWARDED_CONTRACT' in each.keys():
+                    if 'CONTRACTORS' in each['AWARDED_CONTRACT'].keys():
+                        if isinstance(each['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR'], dict):
+                            contractors.append(each['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']['ADDRESS_CONTRACTOR']['OFFICIALNAME'])
+                        else:
+                            for item in each['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']:
+                                if 'ADDRESS_CONTRACTORS' in item.keys():
+                                    if 'OFFICIALNAME' in item['ADDRESS_CONTRACT'].keys():
+                                        contractors.append(item['ADDRESS_CONTRACT']['OFFICIALNAME'])
+                    if 'VALUES' in each['AWARDED_CONTRACT'].keys():
+                        if 'VAL_ESTIMATED_TOTAL' in each['AWARDED_CONTRACT']['VALUES'].keys():
+                            awarded_est_val.append(each['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['#text']+' '+each['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['@CURRENCY'])
+                        if 'VAL_TOTAL' in each['AWARDED_CONTRACT']['VALUES'].keys():
+                            awarded_tot_val.append(each['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['#text']+' '+each['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['@CURRENCY'])
                 if 'NO_AWARDED_CONTRACT' in each.keys():
                     if 'PROCUREMENT_UNSUCCESSFUL' in each['NO_AWARDED_CONTRACT'].keys():
                         num_of_awarded_contract.append(each['NO_AWARDED_CONTRACT']['PROCUREMENT_UNSUCCESSFUL'])
             d['AWARDED_CONTRACT_LOTS'] = '; '.join(awarded_contract_lots)
             d['AWARDED_CONTRACT_TITLES'] = '; '.join(awarded_contract_titles)
+            d['AWARDED_CONTRACT_CONTRACTORS'] = '; '.join(contractors)
+            d['AWARDED_CONTRACT_EST_TOTAL_VAL'] = '; '.join(awarded_est_val)
+            d['AWARDED_CONTRACT_TOTAL_VAL'] = '; '.join(awarded_tot_val)
             d['AWARDED_CONTRACT_PROCUREMENT_UNSUCCESSFUL'] = '; '.join([str(num) for num in num_of_awarded_contract])
         else:
             d['AWARDED_CONTRACT_LOTS'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['LOT_NO'] if 'LOT_NO' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys() else ''
             d['AWARDED_CONTRACT_TITLES'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['TITLE']['P'] if 'TITLE' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys() else ''
+            if 'AWARDED_CONTRACT' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys():
+                if 'CONTRACTORS' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT'].keys():
+                    if isinstance(doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR'], dict):
+                        d['AWARDED_CONTRACT_CONTRACTORS'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']['ADDRESS_CONTRACTOR']['OFFICIALNAME']
+                    else:
+                        contractors = []
+                        for each in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['CONTRACTORS']['CONTRACTOR']:
+                            if 'ADDRESS_CONTRACTORS' in each.keys():
+                                if 'OFFICIALNAME' in each['ADDRESS_CONTRACTORS'].keys():
+                                    contractors.append(each['ADDRESS_CONTRACTORS']['OFFICIALNAME'])
+                        d['AWARDED_CONTRACT_CONTRACTORS'] = '; '.join(contractors)
+                if 'VALUES' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT'].keys():
+                    if 'VAL_ESTIMATED_TOTAL' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES'].keys():
+                        d['AWARDED_CONTRACT_EST_TOTAL_VAL'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['#text']+' '+doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_ESTIMATED_TOTAL']['@CURRENCY']
+                    if 'VAL_TOTAL' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES'].keys():
+                        d['AWARDED_CONTRACT_TOTAL_VAL'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['#text']+' '+doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT']['VALUES']['VAL_TOTAL']['@CURRENCY']
             if 'NO_AWARDED_CONTRACT' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys():
                 if 'PROCUREMENT_UNSUCCESSFUL' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['NO_AWARDED_CONTRACT'].keys():
                     d['AWARDED_CONTRACT_PROCUREMENT_UNSUCCESSFUL'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['NO_AWARDED_CONTRACT']['PROCUREMENT_UNSUCCESSFUL']
-            
     return d
 
 def R209_CN(doc, EN_POS):
@@ -884,12 +948,12 @@ def R209_PIN(doc, EN_POS):
                             if 'MAIN_SITE' in item.keys():
                                 if isinstance(item['MAIN_SITE']['P'], list):
                                     for ii in item['MAIN_SITE']['P']:
-                                        if isinstance(item, dict):
-                                            main_site.append(item['#text'])
-                                        elif isinstance(item, str):
-                                            main_site.append(item)
+                                        if isinstance(ii, dict):
+                                            main_site.append(ii['#text'])
+                                        elif isinstance(ii, str):
+                                            main_site.append(ii)
                                         else:
-                                            main_site.append(str(item))
+                                            main_site.append(str(ii))
                                 elif isinstance(item['MAIN_SITE']['P'], dict):
                                     main_site.append(item['MAIN_SITE']['P']['#text'])
                                 else:
@@ -1499,13 +1563,13 @@ def get_form_data(doc):
     elif version[:6] == 'R2.0.8':
         #Prior Information Notice
         if 'PRIOR_INFORMATION' in doc['FORM_SECTION'].keys():
-            return 0
+            return 0 #R208_PIN(doc, EN_POS)
         #Contract Notice
         elif 'CONTRACT' in doc['FORM_SECTION'].keys():
             return 0 #R208_CN(doc, EN_POS)
         #Contract Award Notice
         elif 'CONTRACT_AWARD' in doc['FORM_SECTION'].keys():
-            return 0
+            return 0 #R208_CAN(doc, EN_POS)
         else:
             return 0
 
@@ -1527,7 +1591,12 @@ def parse(dirName):
 
             CONTRACT_NATURE = get_contract_nature(doc)
             if CONTRACT_NATURE == 'Services':
-                FORM_DATA = get_form_data(doc)
+                try:
+                	FORM_DATA = get_form_data(doc)
+                except MemoryError as error:
+                	print('ran into MEMORY ERROR!!!')
+                	FORM_DATA = 0
+
                 if FORM_DATA != 0:
                     EN_POS = get_lang_pos(doc)
                     VERSION = get_version(doc)
@@ -1542,28 +1611,31 @@ def parse(dirName):
                 print('')
         
 # only EDIT this: path for all uncompressed XMLs
-dirName = 'FTP_Data/2020/'
+dirNameList = ['FTP_Data/2019/', 'FTP_Data/2020/']
 
-# Runner
-print('[info] Parsing XMLs ...')
-print(dt.now())
-parse(dirName)
-print(dt.now())
+for dirName in dirNameList:
+	# Runner
+	print('[info] Parsing XMLs ... from {}'.format(dirName))
+	st = dt.now()
+	print(st)
+	parse(dirName)
+	print('[info] the whole parsing process took {} time'.format(dt.now()-st))
 
-# Merger
-print('[info] Merging the CSVs ...')
-print(dt.now())
-for subdir in os.listdir(dirName):
-    out_filename = os.path.join(dirName, subdir)
-    print("[info] merging all csv files in '{}'".format(out_filename))
-    combined_csv = pd.DataFrame()
-    for subsubdir in os.listdir(os.path.join(dirName, subdir)):
-        path = os.path.join(dirName, subdir, subsubdir).replace('\\','/')
-        for root, subsubdir, files in os.walk(path):
-            for file in tqdm(files):
-                if file[-4:] == '.csv':
-                    combined_csv = pd.concat([combined_csv, pd.read_csv(os.path.join(path, file))], sort=True)
-    combined_csv.to_csv(out_filename+'.csv', index=False, encoding='utf-8')
-    print("[info] saved '{}' to disk".format(out_filename+'.csv'))
-    del combined_csv
-print(dt.now())
+	# Merger
+	print('[info] Merging the CSVs ... from {}'.format(dirName))
+	st = dt.now()
+	print(st)
+	for subdir in os.listdir(dirName):
+	    out_filename = os.path.join(dirName, subdir)
+	    print("[info] merging all csv files in '{}'".format(out_filename))
+	    combined_csv = pd.DataFrame()
+	    for subsubdir in os.listdir(os.path.join(dirName, subdir)):
+	        path = os.path.join(dirName, subdir, subsubdir).replace('\\','/')
+	        for root, subsubdir, files in os.walk(path):
+	            for file in tqdm(files):
+	                if file[-4:] == '.csv':
+	                    combined_csv = pd.concat([combined_csv, pd.read_csv(os.path.join(path, file))], sort=True)
+	    combined_csv.to_csv(out_filename+'.csv', index=False, encoding='utf-8')
+	    print("[info] saved '{}' to disk".format(out_filename+'.csv'))
+	    del combined_csv
+	print('[info] the whole merging parsed output process took {} time'.format(dt.now()-st))
