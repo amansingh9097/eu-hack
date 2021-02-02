@@ -89,10 +89,7 @@ def R209_CAN(doc, EN_POS):
             d['VERSION'] = doc['FORM_SECTION'][list(doc['FORM_SECTION'].keys())[0]][0]['@VERSION']
     if isinstance(doc['FORM_SECTION']['F03_2014'], list):
         d['FORM'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['@FORM']
-        if 'LEGAL_BASIS' in doc['FORM_SECTION']['F03_2014'][EN_POS].keys(): 
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['LEGAL_BASIS']['@VALUE']
-        elif 'LEGAL_BASIS_OTHER' in doc['FORM_SECTION']['F03_2014'][EN_POS].keys(): 
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['LEGAL_BASIS_OTHER']['P']
+        d['LEGAL_BASIS'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['LEGAL_BASIS']['@VALUE']
         d['CONTRACTING_BODY'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['OFFICIALNAME']
         d['CONTRACTING_BODY_ADDRESS'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['ADDRESS'] if 'ADDRESS' in doc['FORM_SECTION']['F03_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
         d['CONTRACTING_BODY_TOWN'] = doc['FORM_SECTION']['F03_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['TOWN'] if 'TOWN' in doc['FORM_SECTION']['F03_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
@@ -284,10 +281,7 @@ def R209_CAN(doc, EN_POS):
 
     elif isinstance(doc['FORM_SECTION']['F03_2014'], dict):
         d['FORM'] = doc['FORM_SECTION']['F03_2014']['@FORM']
-        if 'LEGAL_BASIS' in doc['FORM_SECTION']['F03_2014'].keys(): 
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F03_2014']['LEGAL_BASIS']['@VALUE']
-        elif 'LEGAL_BASIS_OTHER' in doc['FORM_SECTION']['F03_2014'].keys():
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F03_2014']['LEGAL_BASIS_OTHER']['P']
+        d['LEGAL_BASIS'] = doc['FORM_SECTION']['F03_2014']['LEGAL_BASIS']['@VALUE']
         d['CONTRACTING_BODY'] = doc['FORM_SECTION']['F03_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['OFFICIALNAME']
         d['CONTRACTING_BODY_ADDRESS'] = doc['FORM_SECTION']['F03_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['ADDRESS'] if 'ADDRESS' in doc['FORM_SECTION']['F03_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
         d['CONTRACTING_BODY_TOWN'] = doc['FORM_SECTION']['F03_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['TOWN'] if 'TOWN' in doc['FORM_SECTION']['F03_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
@@ -427,9 +421,11 @@ def R209_CAN(doc, EN_POS):
             d['OBJECT_DESCR_SHORT_DESCR'] = ','.join([','.join(i) for i in short_descr if isinstance(i, list)])
             
         if isinstance(doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'], list):
-            awarded_contract_lots, awarded_contract_titles, num_of_awarded_contract, contractors, awarded_est_val, awarded_tot_val = [],[],[],[],[],[]
+            awarded_contract_lots, awarded_contract_titles, num_of_awarded_contract, contractors, awarded_est_val, awarded_tot_val, awarded_cont_num = [],[],[],[],[],[],[]
             for each in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']:
                 awarded_contract_lots.append(each['LOT_NO']) if 'LOT_NO' in each.keys() else ''
+                if 'CONTRACT_NO' in each.keys():
+                    awarded_cont_num.append(each['CONTRACT_NO'])
                 if 'TITLE' in each.keys():
                     if isinstance(each['TITLE']['P'], str):
                         awarded_contract_titles.append(each['TITLE']['P'])
@@ -453,6 +449,7 @@ def R209_CAN(doc, EN_POS):
                     if 'PROCUREMENT_UNSUCCESSFUL' in each['NO_AWARDED_CONTRACT'].keys():
                         num_of_awarded_contract.append(each['NO_AWARDED_CONTRACT']['PROCUREMENT_UNSUCCESSFUL'])
             d['AWARDED_CONTRACT_LOTS'] = '; '.join(awarded_contract_lots)
+            d['AWARDED_CONTRACT_NO'] = '; '.join(awarded_cont_num)
             d['AWARDED_CONTRACT_TITLES'] = '; '.join(awarded_contract_titles)
             d['AWARDED_CONTRACT_CONTRACTORS'] = '; '.join(contractors)
             d['AWARDED_CONTRACT_EST_TOTAL_VAL'] = '; '.join(awarded_est_val)
@@ -460,6 +457,7 @@ def R209_CAN(doc, EN_POS):
             d['AWARDED_CONTRACT_PROCUREMENT_UNSUCCESSFUL'] = '; '.join([str(num) for num in num_of_awarded_contract])
         else:
             d['AWARDED_CONTRACT_LOTS'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['LOT_NO'] if 'LOT_NO' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys() else ''
+            d['AWARDED_CONTRACT_NO'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['CONTRACT_NO'] if 'CONTRACT_NO' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys() else ''
             d['AWARDED_CONTRACT_TITLES'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['TITLE']['P'] if 'TITLE' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys() else ''
             if 'AWARDED_CONTRACT' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys():
                 if 'CONTRACTORS' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['AWARDED_CONTRACT'].keys():
@@ -480,6 +478,8 @@ def R209_CAN(doc, EN_POS):
             if 'NO_AWARDED_CONTRACT' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT'].keys():
                 if 'PROCUREMENT_UNSUCCESSFUL' in doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['NO_AWARDED_CONTRACT'].keys():
                     d['AWARDED_CONTRACT_PROCUREMENT_UNSUCCESSFUL'] = doc['FORM_SECTION']['F03_2014']['AWARD_CONTRACT']['NO_AWARDED_CONTRACT']['PROCUREMENT_UNSUCCESSFUL']
+
+            
     return d
 
 def R209_CN(doc, EN_POS):
@@ -760,10 +760,7 @@ def R209_PIN(doc, EN_POS):
             d['VERSION'] = doc['FORM_SECTION'][list(doc['FORM_SECTION'].keys())[0]][0]['@VERSION']
     if isinstance(doc['FORM_SECTION']['F01_2014'], list):
         d['FORM'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['@FORM']
-        if 'LEGAL_BASIS' in doc['FORM_SECTION']['F01_2014'][EN_POS].keys(): 
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['LEGAL_BASIS']['@VALUE']
-        elif 'LEGAL_BASIS_OTHER' in doc['FORM_SECTION']['F01_2014'][EN_POS].keys():
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['LEGAL_BASIS_OTHER']['P']
+        d['LEGAL_BASIS'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['LEGAL_BASIS']['@VALUE']
         d['CONTRACTING_BODY'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['OFFICIALNAME']
         d['CONTRACTING_BODY_ADDRESS'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['ADDRESS'] if 'ADDRESS' in doc['FORM_SECTION']['F01_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
         d['CONTRACTING_BODY_TOWN'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['TOWN'] if 'TOWN' in doc['FORM_SECTION']['F01_2014'][EN_POS]['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
@@ -777,7 +774,7 @@ def R209_PIN(doc, EN_POS):
         d['CONTRACT_COVERED_GPA'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['PROCEDURE']['CONTRACT_COVERED_GPA'] if 'CONTRACT_COVERED_GPA' in doc['FORM_SECTION']['F01_2014'][EN_POS]['PROCEDURE'].keys() else ''
         d['DATE_DISPATCH_NOTICE'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['COMPLEMENTARY_INFO']['DATE_DISPATCH_NOTICE'] if 'DATE_DISPATCH_NOTICE' in doc['FORM_SECTION']['F01_2014'][EN_POS]['COMPLEMENTARY_INFO'].keys() else ''
         if isinstance(doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT'], dict):
-            d['CONTRACT_TITLE'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT']['TITLE']['P']
+            d['TITLE'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT']['TITLE']['P']
             d['REFERENCE_NUMBER'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT']['REFERENCE_NUMBER'] if 'REFERENCE_NUMBER' in doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT'].keys() else ''
             d['CPV_MAIN'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT']['CPV_MAIN']['CPV_CODE']['@CODE']
             d['TYPE_CONTRACT'] = doc['FORM_SECTION']['F01_2014'][EN_POS]['OBJECT_CONTRACT']['TYPE_CONTRACT']['@CTYPE']
@@ -1004,7 +1001,7 @@ def R209_PIN(doc, EN_POS):
                     pub_not_date.append(each['DATE_PUBLICATION_NOTICE'])       
             
             d['MAIN_SITE'] = '; '.join([str(x) if x is None else x for x in main_site])
-            d['CONTRACT_TITLE'] = '; '.join(titles)
+            d['TITLE'] = '; '.join(titles)
             d['CPV_MAIN'] = '; '.join(cpv_mains)
             d['TYPE_CONTRACT'] = '; '.join(cnt_types)
             d['SHORT_DESCR'] = '; '.join(shrt_dsc)
@@ -1022,10 +1019,7 @@ def R209_PIN(doc, EN_POS):
 
     elif isinstance(doc['FORM_SECTION']['F01_2014'], dict):
         d['FORM'] = doc['FORM_SECTION']['F01_2014']['@FORM']
-        if 'LEGAL_BASIS' in doc['FORM_SECTION']['F01_2014'].keys(): 
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F01_2014']['LEGAL_BASIS']['@VALUE']
-        elif 'LEGAL_BASIS_OTHER' in doc['FORM_SECTION']['F01_2014'].keys():
-            d['LEGAL_BASIS'] = doc['FORM_SECTION']['F01_2014']['LEGAL_BASIS_OTHER']['P']
+        d['LEGAL_BASIS'] = doc['FORM_SECTION']['F01_2014']['LEGAL_BASIS']['@VALUE']
         d['CONTRACTING_BODY'] = doc['FORM_SECTION']['F01_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['OFFICIALNAME']
         d['CONTRACTING_BODY_ADDRESS'] = doc['FORM_SECTION']['F01_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['ADDRESS'] if 'ADDRESS' in doc['FORM_SECTION']['F01_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
         d['CONTRACTING_BODY_TOWN'] = doc['FORM_SECTION']['F01_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY']['TOWN'] if 'TOWN' in doc['FORM_SECTION']['F01_2014']['CONTRACTING_BODY']['ADDRESS_CONTRACTING_BODY'].keys() else ''
@@ -1039,12 +1033,14 @@ def R209_PIN(doc, EN_POS):
         d['CONTRACT_COVERED_GPA'] = doc['FORM_SECTION']['F01_2014']['PROCEDURE']['CONTRACT_COVERED_GPA'] if 'CONTRACT_COVERED_GPA' in doc['FORM_SECTION']['F01_2014']['PROCEDURE'].keys() else ''
         d['DATE_DISPATCH_NOTICE'] = doc['FORM_SECTION']['F01_2014']['COMPLEMENTARY_INFO']['DATE_DISPATCH_NOTICE'] if 'DATE_DISPATCH_NOTICE' in doc['FORM_SECTION']['F01_2014']['COMPLEMENTARY_INFO'].keys() else ''
         if isinstance(doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT'], dict):
-            d['CONTRACT_TITLE'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['TITLE']['P']
+            d['TITLE'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['TITLE']['P']
             d['REFERENCE_NUMBER'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['REFERENCE_NUMBER'] if 'REFERENCE_NUMBER' in doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT'].keys() else ''
             d['CPV_MAIN'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['CPV_MAIN']['CPV_CODE']['@CODE']
             d['TYPE_CONTRACT'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['TYPE_CONTRACT']['@CTYPE']
             d['TOTAL_VAL_CURR'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['VAL_TOTAL']['@CURRENCY'] if 'VAL_TOTAL' in doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT'].keys() else ''
             d['TOTAL_VAL'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['VAL_TOTAL']['#text'] if 'VAL_TOTAL' in doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT'].keys() else ''
+            d['ESTIMATED_TOTAL_VALUE_CURR'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['VAL_ESTIMATED_TOTAL']['@CURRENCY'] if 'VAL_ESTIMATED_TOTAL' in doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT'].keys() else ''
+            d['ESTIMATED_TOTAL_VALUE'] = doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['VAL_ESTIMATED_TOTAL']['#text'] if 'VAL_ESTIMATED_TOTAL' in doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT'].keys() else ''
             shrt_dsc = []
             if isinstance(doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['SHORT_DESCR']['P'], list):
                 for each in doc['FORM_SECTION']['F01_2014']['OBJECT_CONTRACT']['SHORT_DESCR']['P']:
@@ -1272,7 +1268,7 @@ def R209_PIN(doc, EN_POS):
                     pub_not_date.append(each['DATE_PUBLICATION_NOTICE'])       
             
             d['MAIN_SITE'] = '; '.join([str(x) if x is None else x for x in main_site])
-            d['CONTRACT_TITLE'] = '; '.join(titles)
+            d['TITLE'] = '; '.join(titles)
             d['CPV_MAIN'] = '; '.join(cpv_mains)
             d['TYPE_CONTRACT'] = '; '.join(cnt_types)
             d['SHORT_DESCR'] = ''.join(shrt_dsc)
@@ -1920,13 +1916,13 @@ def get_form_data(doc):
     if version[:6] == 'R2.0.9':
         #Prior Information Notice
         if 'F01_2014' in doc['FORM_SECTION'].keys():
-            return 0 #R209_PIN(doc, EN_POS)
+            return R209_PIN(doc, EN_POS)
         #Contract Notice
         elif 'F02_2014' in doc['FORM_SECTION'].keys():
-            return 0 #R209_CN(doc, EN_POS)
+            return R209_CN(doc, EN_POS)
         #Contract Award Notice
         elif 'F03_2014' in doc['FORM_SECTION'].keys():
-            return 0 #R209_CAN(doc, EN_POS)
+            return R209_CAN(doc, EN_POS)
         else:
             return 0
     elif version[:6] == 'R2.0.8':
@@ -1935,10 +1931,10 @@ def get_form_data(doc):
             return R208_PIN(doc, EN_POS)
         #Contract Notice
         elif 'CONTRACT' in doc['FORM_SECTION'].keys():
-            return 0 #R208_CN(doc, EN_POS)
+            return R208_CN(doc, EN_POS)
         #Contract Award Notice
         elif 'CONTRACT_AWARD' in doc['FORM_SECTION'].keys():
-            return 0 #R208_CAN(doc, EN_POS)
+            return R208_CAN(doc, EN_POS)
         else:
             return 0
 
